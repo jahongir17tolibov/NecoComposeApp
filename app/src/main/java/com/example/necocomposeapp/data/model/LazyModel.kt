@@ -1,4 +1,4 @@
-package com.example.necocomposeapp.model
+package com.example.necocomposeapp.data.model
 
 data class LazyModel(
     val numb: Int = 0,

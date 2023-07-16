@@ -1,4 +1,4 @@
-package com.example.necocomposeapp.uicomponents
+package com.example.necocomposeapp.presentation.uicomponents
 
 import android.widget.Toast
 import androidx.compose.foundation.Image

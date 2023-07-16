@@ -1,4 +1,4 @@
-package com.example.necocomposeapp.activity
+package com.example.necocomposeapp.presentation.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -37,9 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.necocomposeapp.model.LazyModel
+import com.example.necocomposeapp.data.model.LazyModel
 import com.example.necocomposeapp.R
-import com.example.necocomposeapp.navigation.SetupNavGraph
+import com.example.necocomposeapp.presentation.navigation.SetupNavGraph
 import com.example.necocomposeapp.ui.theme.NecoComposeAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -138,6 +138,7 @@ fun SimpleText(
     modifier = modifier,
     style = TextStyle(color = color, fontWeight = fontWeight, fontSize = textSize.sp)
 )
+
 
 @Preview(showBackground = true)
 @Composable

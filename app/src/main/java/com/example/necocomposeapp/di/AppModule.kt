@@ -1,5 +1,6 @@
 package com.example.necocomposeapp.di
 
+import com.example.necocomposeapp.data.DataStoreManager
 import com.example.necocomposeapp.domain.networking.ApiService
 import com.example.necocomposeapp.domain.networking.KtorApiService
 import com.example.necocomposeapp.domain.viewmodel.StoreViewModel
@@ -15,10 +16,14 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
+
+    single { DataStoreManager(androidContext()) }
+
 }
 
 val networkModule = module {

@@ -2,7 +2,7 @@ package com.example.necocomposeapp.domain.networking
 
 import android.util.Log
 import com.example.necocomposeapp.domain.intent.ResponseState
-import com.example.necocomposeapp.model.Product
+import com.example.necocomposeapp.data.model.Product
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
@@ -30,7 +30,6 @@ class KtorApiService(private val httpClient: HttpClient) : ApiService {
             }
             val product = json.decodeFromString<List<Product>>(response)
             if (product.isNotEmpty()) {
-                Log.d("jt1771tj", "getStoreApi: $product")
                 emit(ResponseState.Success(product))
             } else {
                 emit(ResponseState.Empty)

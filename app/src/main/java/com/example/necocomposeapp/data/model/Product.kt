@@ -1,4 +1,4 @@
-package com.example.necocomposeapp.model
+package com.example.necocomposeapp.data.model
 
 import kotlinx.serialization.Serializable
 
@@ -10,7 +10,7 @@ data class Product(
     val description: String? = null,
     val category: String? = null,
     val image: String? = null,
-//    val rating: RatingModel? = null
+    val rating: RatingModel? = null
 ) {
 
     @Serializable

@@ -1,4 +1,4 @@
-package com.example.necocomposeapp.uicomponents
+package com.example.necocomposeapp.presentation.uicomponents
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.WindowInsets

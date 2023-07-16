@@ -1,4 +1,4 @@
-package com.example.necocomposeapp.screens
+package com.example.necocomposeapp.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.necocomposeapp.uicomponents.AppToolbar
-import com.example.necocomposeapp.navigation.Screen
+import com.example.necocomposeapp.presentation.uicomponents.AppToolbar
+import com.example.necocomposeapp.presentation.navigation.Destinations
 
 @Composable
 fun DetailScreen(navController: NavHostController) {
@@ -32,7 +32,7 @@ fun DetailScreen(navController: NavHostController) {
         AppToolbar(appBarTitle = {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "Detail Screen",
+                    text = "Detail Destinations",
                     color = Color.White,
                     textAlign = TextAlign.Center
                 )
@@ -60,7 +60,7 @@ fun DetailScreen(navController: NavHostController) {
                         .size(120.dp)
                         .background(color = Color.Green)
                         .clickable {
-                            navController.navigate(Screen.Home.route)
+                            navController.navigate(Destinations.Home.route)
                         },
                     contentAlignment = Alignment.TopCenter
                 ) {

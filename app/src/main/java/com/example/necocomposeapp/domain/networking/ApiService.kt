@@ -1,7 +1,7 @@
 package com.example.necocomposeapp.domain.networking
 
 import com.example.necocomposeapp.domain.intent.ResponseState
-import com.example.necocomposeapp.model.Product
+import com.example.necocomposeapp.data.model.Product
 import kotlinx.coroutines.flow.Flow
 
 interface ApiService {

@@ -1,14 +1,18 @@
-package com.example.necocomposeapp.screens
+package com.example.necocomposeapp.presentation.screens
 
+import android.app.Activity
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +28,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,13 +39,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -55,29 +56,70 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import com.example.necocomposeapp.R
-import com.example.necocomposeapp.domain.intent.ResponseState
+import com.example.necocomposeapp.domain.provider.ProductsListContract
+import com.example.necocomposeapp.domain.provider.collectInLaunchedEffect
+import com.example.necocomposeapp.domain.provider.use
 import com.example.necocomposeapp.domain.viewmodel.StoreViewModel
-import com.example.necocomposeapp.model.Product
-import com.example.necocomposeapp.uicomponents.AppToolbar
-import org.koin.androidx.compose.getViewModel
-
+import com.example.necocomposeapp.data.model.Product
+import com.example.necocomposeapp.presentation.uicomponents.AppToolbar
+import kotlinx.coroutines.coroutineScope
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun ProductsListRoute(
+    viewModel: StoreViewModel = koinViewModel(),
+    onNavigateToSettingsScreen: () -> Unit
+) {
+
+    val (state, effect, event) = use(viewModel = viewModel)
+    val activity = LocalContext.current as? Activity
+
+    LaunchedEffect(Unit) {
+        event.run {
+            invoke(ProductsListContract.Event.OnGetProductsList)
+            invoke(ProductsListContract.Event.IsLoading)
+        }
+    }
+
+    effect.collectInLaunchedEffect {
+        when (it) {
+            ProductsListContract.Effect.OnBackPressed -> object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    event.invoke(ProductsListContract.Event.OnBackPressed)
+                }
+            }
+
+            is ProductsListContract.Effect.ShowToast -> {
+                Toast.makeText(activity, it.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    HomeScreen(
+        productsListState = state,
+        onLoading = { event.invoke(ProductsListContract.Event.IsLoading) },
+        onNavigateToSettingsScreen = onNavigateToSettingsScreen
+    )
+
+}
+
+@Composable
+fun HomeScreen(
+    productsListState: ProductsListContract.State,
+    onLoading: () -> Unit,
+    onNavigateToSettingsScreen: () -> Unit
+) {
     Scaffold(topBar = {
         AppToolbar(appBarTitle = {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "Home Screen", color = Color.White, textAlign = TextAlign.Center
+                    text = "Home Destinations", color = Color.White, textAlign = TextAlign.Center
                 )
             }
-        }, modifier = Modifier.clickable { navController.popBackStack() })
+        }, modifier = Modifier.clickable { })
     }) { paddingValues ->
 
         Surface(
@@ -86,79 +128,115 @@ fun HomeScreen(navController: NavHostController) {
                 .padding(paddingValues),
             color = MaterialTheme.colorScheme.background
         ) {
-            val viewModel = getViewModel<StoreViewModel>()
-            viewModel.loadProducts()
+//            val viewModel = getViewModel<StoreViewModel>()
+//            viewModel.loadProducts()/* load data from viewModel */
+//            InitLoadData(viewModel = viewModel)
+            Log.d("jt1771tj", "HomeScreen: ${productsListState.isLoading}")
 
-            InitLoadData(viewModel = viewModel)
+            SetupCircularProgress(visibility = productsListState.isLoading.not())
+
+            AnimatedVisibility(
+                visible = productsListState.isLoading,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                SetupLazyColumn(
+                    list = productsListState.products,
+                    onNavigateToSettingsScreen = onNavigateToSettingsScreen
+                )
+            }
+
 
         }
 
     }
 }
 
+//@Composable
+//fun InitLoadData(viewModel: StoreViewModel) {
+//    val productsState by viewModel.products.collectAsState()
+//
+//    when (productsState) {
+//        is ResponseState.Success -> {
+//            val productList = (productsState as ResponseState.Success<List<Product>>).data
+//            SetupLazyColumn(list = productList)
+//            SetupCircularProgress(false)
+//        }
+//
+//        is ResponseState.Loading -> SetupCircularProgress()
+//
+//        is ResponseState.Error -> Toast.makeText(
+//            LocalContext.current,
+//            (productsState as ResponseState.Error).message,
+//            Toast.LENGTH_SHORT
+//        ).show()
+//
+//        else -> Unit
+//    }
+//
+//}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun InitLoadData(viewModel: StoreViewModel) {
-    val productsState by viewModel.products.collectAsState()
-
-    when (productsState) {
-        is ResponseState.Success -> {
-            val productList = (productsState as ResponseState.Success<List<Product>>).data
-            Log.d("jt1771tj", "InitLoadData: $productList")
-            SetupLazyColumn(list = productList)
-            SetupCircularProgress(false)
-        }
-
-        is ResponseState.Loading -> SetupCircularProgress()
-
-        is ResponseState.Error -> Toast.makeText(
-            LocalContext.current,
-            (productsState as ResponseState.Error).message,
-            Toast.LENGTH_SHORT
-        ).show()
-
-        else -> Unit
-    }
-
-}
-
-@Composable
-fun SetupLazyColumn(list: List<Product>) = LazyColumn(
-    modifier = Modifier.fillMaxSize(),
-    contentPadding = PaddingValues()
-) {
-
-    itemsIndexed(items = list) { _, product ->
-        ProductsItem(
-            model = Product(
-                id = product.id,
-                title = product.title,
-                price = product.price,
-                image = product.image,
-                category = product.category,
-                description = product.description,
-//                rating = product.rating
-            )
-        )
-    }
-
-
-}
-
-@Composable
-fun SetupCircularProgress(visibility: Boolean = true) {
-    Box(
+fun SetupLazyColumn(list: List<Product>, onNavigateToSettingsScreen: () -> Unit) =
+    LazyColumn(
         modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
+            .fillMaxSize()
+            .animateContentSize(),
+        contentPadding = PaddingValues(),
     ) {
-        AnimatedVisibility(
-            visible = visibility,
-            enter = fadeIn(tween(1000)),
-            exit = fadeOut(tween(1000))
+
+        itemsIndexed(items = list) { _, product ->
+            ProductsItem(
+                model = Product(
+                    id = product.id,
+                    title = product.title,
+                    price = product.price,
+                    image = product.image,
+                    category = product.category,
+                    description = product.description,
+                    rating = product.rating
+                )
+            )
+        }
+
+        stickyHeader {
+            Button(
+                onClick = onNavigateToSettingsScreen,
+                contentPadding = PaddingValues(horizontal = 10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .background(Color.Blue),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Settings")
+                }
+            }
+        }
+
+    }
+
+@Composable
+fun SetupCircularProgress(visibility: Boolean = false) {
+    AnimatedVisibility(
+        visible = visibility,
+        enter = fadeIn(tween(2000)),
+        exit = fadeOut(tween(2000)),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .animateContentSize(),
+            contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(modifier = Modifier)
         }
     }
+
 }
 
 @Composable
@@ -257,7 +335,7 @@ fun ProductsItem(model: Product) {
             AnnotatedTextView(startText = "price", endText = model.price.toString())
 
             //rating
-//            AnnotatedTextView(startText = "rating", endText = model.rating?.rate.toString())
+            AnnotatedTextView(startText = "rating", endText = model.rating?.rate.toString())
 
         }
     }
@@ -295,7 +373,7 @@ fun PreviewItem() {
             category = "men's clothing",
             description = "Your perfect pack for everyday use and walks in the forest. Stash your laptop (up to 15 inches) in the padded sleeve, your everyday",
             image = "https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg",
-//            rating = Product.RatingModel(3.9, 200)
+            rating = Product.RatingModel(3.9, 200)
         )
     )
 }
@@ -303,5 +381,5 @@ fun PreviewItem() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewHomeScreen() {
-    HomeScreen(navController = rememberNavController())
+//    HomeScreen()
 }
